@@ -129,7 +129,9 @@ for tool_call in assistant_message.tool_calls:
 *The loop should stop when: (a) the LLM returns a response with no tool calls, OR (b) the MAX_TOOL_ROUNDS limit is reached. Describe how you will detect each condition and what you will return in each case.*
 
 ```
-[your answer here]
+There are two instances where the loop should terminate: 
+- the LLM, with role "assistant" returns a response of type "content" or any other that is not "tool_calls", in which case we return the response delivered by the LLM
+- the length of the messages list exceeds MAX_TOOL_ROUNDS + 2, in which case we return an error message "number of iterations exceeded maximum allowed"
 ```
 
 ---
@@ -139,7 +141,7 @@ for tool_call in assistant_message.tool_calls:
 *Once the loop exits because there are no more tool calls, how do you extract the text content from the response object? What field holds the string you should return?*
 
 ```
-[your answer here]
+For extraction, look into the response object and get the value of the key "content". This is the final message by the LLM after all necessary tool calls were made.
 ```
 
 ---
@@ -152,19 +154,19 @@ for tool_call in assistant_message.tool_calls:
 
 ```
 Query: "How should I care for my calathea?"
-Round 1 tool call: [tool name, args]
-Round 2 tool call: [tool name, args] (if any)
-Final response: [brief description]
+Round 1 tool call: lookup_plant({"plant_name": "calathea"})
+Round 2 tool call: none
+Final response: The model used the returned Calathea care data to answer with specific care guidance.
 ```
 
 **What happens when you ask about a plant that isn't in the database?**
 
 ```
-[describe the behavior you observed]
+lookup_plant returns {"found": false, ...} with the not-found message. The agent passes that tool result back to the model so it can say the plant was not found and offer general guidance or ask for clarification.
 ```
 
 **One thing about the tool call API that surprised you:**
 
 ```
-[your answer here]
+For a no-argument tool call, the API can send arguments as the JSON string "null"; json.loads("null") returns None, so the loop needs to normalize non-dict arguments to {} before dispatching.
 ```

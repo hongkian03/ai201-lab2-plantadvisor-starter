@@ -44,7 +44,7 @@ def lookup_plant(plant_name: str) -> dict:
       {"found": True, "plant": <the full plant dict>}
 
     Return format when not found:
-      {"found": False, "name": <original input>, "message": <helpful string>}
+      {"found": False, "name": <normalized input>, "message": <helpful string>}
 
     The message in the not-found case matters — the agent will use it to decide
     what to tell the user. Your spec has a dedicated field for this — think about
@@ -52,10 +52,31 @@ def lookup_plant(plant_name: str) -> dict:
 
     Before writing code, complete the lookup_plant section of specs/tool-functions-spec.md.
     """
+    normalized = plant_name.strip().lower()
+
+    if normalized in _plant_db:
+        return {"found": True, "plant": _plant_db[normalized]}
+
+    for plant in _plant_db.values():
+        if plant["display_name"].strip().lower() == normalized:
+            return {"found": True, "plant": plant}
+
+    for plant in _plant_db.values():
+        if plant["scientific_name"].strip().lower() == normalized:
+            return {"found": True, "plant": plant}
+
+    for plant in _plant_db.values():
+        normalized_aliases = [
+            alias.strip().lower()
+            for alias in plant.get("aliases", [])
+        ]
+        if normalized in normalized_aliases:
+            return {"found": True, "plant": plant}
+
     return {
         "found": False,
-        "name": plant_name,
-        "message": "Plant lookup not yet implemented. Complete Milestone 1.",
+        "name": normalized,
+        "message": "No plant matching the normalized user input was found. The user perhaps made a typo or has searched for a plant not in our data. Clarify with the user on their input and ask them to try again before we call the tool again.",
     }
 
 

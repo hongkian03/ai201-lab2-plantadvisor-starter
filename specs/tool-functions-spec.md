@@ -73,7 +73,11 @@ the broadest net, so they go last.
 *Aliases are stored as a list of strings. How will you check if the normalized input matches any alias in the list? Write your approach in pseudocode or plain English.*
 
 ```
-[your answer here]
+How to normalize the input:
+- make all lowercase
+- strip whitespace
+How to check against the list of aliases:
+- iterate through every plant, check input against all items in each alias list
 ```
 
 ---
@@ -83,7 +87,7 @@ the broadest net, so they go last.
 *When a plant isn't found, the agent will read your message and use it to decide what to tell the user. Write the exact string you'll return — make it useful to the agent, not just to a human reading logs.*
 
 ```
-[your answer here]
+No plant matching the normalized user input was found. The user perhaps made a typo or has searched for a plant not in our data. Clarify with the user on their input and ask them to try again before we call the tool again.
 ```
 
 ---
@@ -94,17 +98,17 @@ the broadest net, so they go last.
 
 **Test: does `"devil's ivy"` return the pothos entry?**
 ```
-[yes / no — if no, describe what happened]
+yes
 ```
 
 **Test: does `"SNAKE PLANT"` return the snake plant entry?**
 ```
-[yes / no — if no, describe what happened]
+yes
 ```
 
 **One edge case you discovered while implementing:**
 ```
-[your answer here]
+Matching is case-insensitive and trims surrounding whitespace, but punctuation and hyphen variants still need to match the stored slug, display name, scientific name, or alias text.
 ```
 
 ---

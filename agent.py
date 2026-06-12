@@ -132,4 +132,57 @@ def run_agent(user_message: str, history: list) -> str:
 
     Before writing code, complete specs/agent-loop-spec.md.
     """
-    return "🌱 Agent not yet implemented. Complete Milestone 2 to activate the Plant Advisor."
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    for msg in history or []:
+        if not isinstance(msg, dict):
+            continue
+        if msg.get("role") in {"user", "assistant"}:
+            messages.append({
+                "role": msg["role"],
+                "content": msg.get("content", ""),
+            })
+
+    messages.append({"role": "user", "content": user_message})
+
+    try:
+        for _ in range(MAX_TOOL_ROUNDS):
+            response = _client.chat.completions.create(
+                model=LLM_MODEL,
+                messages=messages,
+                tools=TOOL_DEFINITIONS,
+                tool_choice="auto",
+            )
+            assistant_message = response.choices[0].message
+
+            if not assistant_message.tool_calls:
+                return assistant_message.content or (
+                    "I couldn't generate a response. Please try rephrasing your plant care question."
+                )
+
+            messages.append(assistant_message)
+
+            for tool_call in assistant_message.tool_calls:
+                raw_args = tool_call.function.arguments
+                try:
+                    tool_args = json.loads(raw_args) if raw_args else {}
+                except (json.JSONDecodeError, TypeError):
+                    tool_args = {}
+
+                tool_result = dispatch_tool(tool_call.function.name, tool_args)
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_result,
+                })
+
+        return (
+            "I reached the tool-use limit before finishing the answer. "
+            "Please try asking a narrower plant care question."
+        )
+    except Exception as exc:
+        print(f"Agent error: {exc}")
+        return (
+            "I ran into a problem while answering. "
+            "Please try again with a specific plant or care question."
+        )
